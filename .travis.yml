@@ -1,0 +1,5 @@
+branches:
+  only: master
+language: python
+install: pip install tox
+script: tox
