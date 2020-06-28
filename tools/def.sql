@@ -7,29 +7,34 @@ CREATE TABLE IF NOT EXISTS releases (
   project varchar(32),
   version varchar(32));
 
-CREATE TABLE IF NOT EXISTS information (
-  release_id smallint PRIMARY KEY,
-  summary varchar(255),
-  homepage varchar(2083),
-  email varchar(255));
-
 CREATE TABLE IF NOT EXISTS contacts (
   email varchar(255) PRIMARY KEY,
   name varchar(255));
 
-CREATE TABLE IF NOT EXISTS classifiers (
-  release_id smallint,
-  trove_id smallint,
-  PRIMARY KEY (release_id, trove_id));
+CREATE TABLE IF NOT EXISTS information (
+  release_id smallint PRIMARY KEY,
+  summary varchar(255),
+  homepage varchar(2083),
+  email varchar(255),
+  FOREIGN KEY (release_id) REFERENCES releases(id),
+  FOREIGN KEY (email) REFERENCES contacts(email));
 
 CREATE TABLE IF NOT EXISTS troves (
   id smallint AUTO_INCREMENT PRIMARY KEY,
   classifier varchar(255));
 
+CREATE TABLE IF NOT EXISTS classifiers (
+  release_id smallint,
+  trove_id smallint,
+  PRIMARY KEY (release_id, trove_id),
+  FOREIGN KEY (release_id) REFERENCES releases(id),
+  FOREIGN KEY (trove_id) REFERENCES troves(id));
+
 CREATE TABLE IF NOT EXISTS keywords (
   release_id smallint,
   term varchar(32),
-  PRIMARY KEY (release_id, term));
+  PRIMARY KEY (release_id, term),
+  FOREIGN KEY (release_id) REFERENCES releases(id));
 
 CREATE TABLE IF NOT EXISTS distributions (
   release_id smallint,
@@ -41,4 +46,5 @@ CREATE TABLE IF NOT EXISTS distributions (
   size int,
   sha256 char(64),
   md5 char(32),
-  PRIMARY KEY (release_id, filename));
+  PRIMARY KEY (release_id, filename),
+  FOREIGN KEY (release_id) REFERENCES releases(id));
