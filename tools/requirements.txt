@@ -1,2 +1,3 @@
 asks
+mysql.connector
 trio

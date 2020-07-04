@@ -2,16 +2,16 @@ DROP DATABASE IF EXISTS cheese_shop;
 CREATE DATABASE cheese_shop;
 USE cheese_shop;
 
-CREATE TABLE IF NOT EXISTS releases (
+CREATE TABLE releases (
   id smallint AUTO_INCREMENT PRIMARY KEY,
   project varchar(32),
   version varchar(32));
 
-CREATE TABLE IF NOT EXISTS contacts (
+CREATE TABLE contacts (
   email varchar(255) PRIMARY KEY,
   name varchar(255));
 
-CREATE TABLE IF NOT EXISTS information (
+CREATE TABLE information (
   release_id smallint PRIMARY KEY,
   summary varchar(255),
   homepage varchar(2083),
@@ -19,24 +19,24 @@ CREATE TABLE IF NOT EXISTS information (
   FOREIGN KEY (release_id) REFERENCES releases(id),
   FOREIGN KEY (email) REFERENCES contacts(email));
 
-CREATE TABLE IF NOT EXISTS troves (
+CREATE TABLE troves (
   id smallint AUTO_INCREMENT PRIMARY KEY,
   classifier varchar(255));
 
-CREATE TABLE IF NOT EXISTS classifiers (
+CREATE TABLE classifiers (
   release_id smallint,
   trove_id smallint,
   PRIMARY KEY (release_id, trove_id),
   FOREIGN KEY (release_id) REFERENCES releases(id),
   FOREIGN KEY (trove_id) REFERENCES troves(id));
 
-CREATE TABLE IF NOT EXISTS keywords (
+CREATE TABLE keywords (
   release_id smallint,
   term varchar(32),
   PRIMARY KEY (release_id, term),
   FOREIGN KEY (release_id) REFERENCES releases(id));
 
-CREATE TABLE IF NOT EXISTS distributions (
+CREATE TABLE distributions (
   release_id smallint,
   filename varchar(255),
   url varchar(255),
