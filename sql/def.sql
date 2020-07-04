@@ -5,7 +5,8 @@ USE cheese_shop;
 CREATE TABLE releases (
   id smallint AUTO_INCREMENT PRIMARY KEY,
   project varchar(32),
-  version varchar(32));
+  version varchar(32),
+  CONSTRAINT integrity UNIQUE (project, version));
 
 CREATE TABLE contacts (
   email varchar(255) PRIMARY KEY,
@@ -21,7 +22,7 @@ CREATE TABLE information (
 
 CREATE TABLE troves (
   id smallint AUTO_INCREMENT PRIMARY KEY,
-  classifier varchar(255));
+  classifier varchar(255) UNIQUE);
 
 CREATE TABLE classifiers (
   release_id smallint,
@@ -36,14 +37,20 @@ CREATE TABLE keywords (
   PRIMARY KEY (release_id, term),
   FOREIGN KEY (release_id) REFERENCES releases(id));
 
+CREATE TABLE dependencies (
+  release_id smallint,
+  dependency varchar(64),
+  PRIMARY KEY (release_id, dependency),
+  FOREIGN KEY (release_id) REFERENCES releases(id));
+
 CREATE TABLE distributions (
   release_id smallint,
   filename varchar(255),
+  size int,
   url varchar(255),
+  dist_type varchar(16),
   python_version varchar(8),
   requires_python varchar(32),
-  requires_dist varchar(64),
-  size int,
   sha256 char(64),
   md5 char(32),
   PRIMARY KEY (release_id, filename),
