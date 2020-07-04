@@ -21,10 +21,10 @@ class CheeseMaker:
         self.connection = connect(user=USER, database=DB)
         self.connection.autocommit = True
         self.cursor = self.connection.cursor()
-        self.classifiers = {}
         for classifier in classifiers:
             self.insert('troves', classifier=classifier)
-            self.classifiers[classifier] = self.cursor.lastrowid
+        self.cursor.execute('SELECT classifier, id FROM troves')
+        self.classifiers = dict(self.cursor.fetchall())
 
     def start_soon(self, async_fn: Awaitable, *args: Any) -> None:
         """Creates a child task, scheduling await async_fn(*args)."""
@@ -37,20 +37,25 @@ class CheeseMaker:
             f'INSERT IGNORE INTO {table} ({", ".join(items)}) '
             f'VALUES ({", ".join(map(repr, items.values()))})')
 
-    def insert_info(self, release_id: int, info: Dict[str, Any]) -> None:
-        """Insert auxiliary information of the given release."""
+    def insert_info(self, info: Dict[str, Any]) -> int:
+        """Insert auxiliary information of the given release.
+
+        Return the release ID.
+        """
         self.insert('contacts', name=info['author'],
                     email=info['author_email'])
-        self.insert('information', release_id=release_id,
+        self.insert('releases', project=info['name'], version=info['version'],
                     summary=info['summary'], homepage=info['home_page'],
                     email=info['author_email'])
-        for classifier in info['classifiers']:
+        release_id = self.cursor.lastrowid
+        for classifier in (info['classifiers'] or []):
             self.insert('classifiers', release_id=release_id,
                         trove_id=self.classifiers[classifier])
         for keyword in (info['keywords'] or '').split(','):
             self.insert('keywords', release_id=release_id, term=keyword)
         for dep in (info['requires_dist'] or []):
             self.insert('dependencies', release_id=release_id, dependency=dep)
+        return release_id
 
     def insert_dist(self, release_id: int,
                     distributions: List[Dict[str, Any]]) -> None:
@@ -82,13 +87,12 @@ class CheeseMaker:
         except JSONDecodeError:
             return
         print('Processing', project_name, version)
-        self.insert('releases', project=project_name, version=version)
-        release_id = self.cursor.lastrowid
-        self.insert_info(release_id, content['info'])
+        release_id = self.insert_info(content['info'])
         self.insert_dist(release_id, content['urls'])
 
     async def coagulate(self, project_name: str) -> None:
         """Fetch project's available versions and metadata."""
+        if project_name == 'ccxt': return  # ccxt has way too many releases
         content = await self.json(f'/pypi/{project_name}/json')
         print('Fetching', project_name)
         for version in content['releases'].keys():

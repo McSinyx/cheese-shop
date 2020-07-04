@@ -16,5 +16,4 @@ To insert the metadata to the `cheese_shop` database, open a shell and run
     pip install -r tools/requirements.txt
     python tools/make-cheeses.py
 
-The script requires Python 3.6 or above.  Due to dummy handling of classifiers,
-`sql/def.sql` needs to be reloaded before each run.
+The script runs on Python 3.6 and above.

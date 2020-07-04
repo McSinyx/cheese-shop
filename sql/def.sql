@@ -2,22 +2,18 @@ DROP DATABASE IF EXISTS cheese_shop;
 CREATE DATABASE cheese_shop;
 USE cheese_shop;
 
-CREATE TABLE releases (
-  id smallint AUTO_INCREMENT PRIMARY KEY,
-  project varchar(32),
-  version varchar(32),
-  CONSTRAINT integrity UNIQUE (project, version));
-
 CREATE TABLE contacts (
   email varchar(255) PRIMARY KEY,
   name varchar(255));
 
-CREATE TABLE information (
-  release_id smallint PRIMARY KEY,
+CREATE TABLE releases (
+  id smallint AUTO_INCREMENT PRIMARY KEY,
+  project varchar(32),
+  version varchar(32),
   summary varchar(255),
   homepage varchar(2083),
   email varchar(255),
-  FOREIGN KEY (release_id) REFERENCES releases(id),
+  CONSTRAINT integrity UNIQUE (project, version),
   FOREIGN KEY (email) REFERENCES contacts(email));
 
 CREATE TABLE troves (
