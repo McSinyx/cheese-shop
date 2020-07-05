@@ -1,0 +1,95 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[english,vietnamese]{babel}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{lmodern}
+\usepackage{hyperref}
+\usepackage{lmodern}
+\usepackage[nottoc,numbib]{tocbibind}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\begin{document}
+\setcounter{page}{0}
+\thispagestyle{empty}
+\vspace*{\stretch{1}}
+\begin{flushright}
+  \setlength{\baselineskip}{1.4\baselineskip}
+\textbf{\Huge Python Package\\Metadata Management}
+  \noindent\rule{\textwidth}{5pt}
+  \emph{\Large Basic Databases}
+  \vspace{\stretch{1}}
+
+  \textbf{by Nguyễn Gia Phong, Nguyễn Quốc Thông,\\
+          Nguyễn Văn Tùng and Trần Minh Vương\\}
+  \selectlanguage{english}
+  \today
+\end{flushright}
+\vspace*{\stretch{2}}
+\pagebreak
+
+\selectlanguage{english}
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+\subsection{Brief Description}
+In traditional Unix-like operating systems like GNU/Linux distributions
+and BSD-based OSes, package managers tries to synchronize the packages metadata
+(such as available versions and dependencies) with that of central repositories.
+While this proves to be reliable and efficient, language-specific
+package managers do not usually have such synchronized databases,
+since they focus on development libraries which have more flexible contraints.
+
+Within the Python packaging ecosystem, this is the case, where package managers
+like \verb|pip| needs to fetch metadata of each package to be installed
+to find out dependencies and other information.  This turns out to have heavy
+performance penalty on the dependency resolution process alone, which is
+already a NP-hard problem.  This project explores ways to store these metadata
+in an efficient in a database, to be used in practice either locally or in a
+local/regional network, to avoid Python package managers from having to
+fetch (and potentially build) entire packages just to find out if it conflicts
+with others.
+
+\selectlanguage{vietnamese}
+\subsection{Authors and Credits}
+The work has been undertaken by group number 8, whose members are listed
+in the following table.
+\begin{center}
+  \begin{tabular}{c c}
+    \toprule
+    Full name & Student ID\\
+    \midrule
+    Nguyễn Gia Phong & BI9-184\\
+    Nguyễn Quốc Thông & BI9-214\\
+    Nguyễn Văn Tùng & BI9-229\\
+    Trần Minh Vương & BI9-239\\
+    \bottomrule
+  \end{tabular}
+\end{center}
+
+This report is licensed under a CC BY-SA 4.0 license, while the source code is
+available on GitHub\footnote{\url{https://github.com/McSinyx/cheese-shop}}
+under AGPLv3+.
+
+We would like to express our special thanks to Dr. Nguyễn Hoàng Hà,
+whose lectures gave us basic understanding on the key principles of
+relational databases.  In addition, we also recieved a lot of help from
+the Python packaging community over \#pypa on Freenode on understanding
+the structure of the metadata as well as finding a way to fetch these
+data from package indices.
+
+\newpage
+\selectlanguage{english}
+\section{User Requirements}
+
+\section{Data Definition}
+\subsection{Entity Relationship Diagram}
+\subsection{Database Schema}
+
+\section{Data Query}
+
+\section{Conclusion}
+
+\begin{thebibliography}{69}
+\end{thebibliography}
+\end{document}
