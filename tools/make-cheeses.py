@@ -11,6 +11,7 @@ USER = 'wensleydale'
 DB = 'cheese_shop'
 INDEX = 'https://pypi.org'
 CONNECTIONS = 20
+SKIP = 'botocore', 'ccxt', 'fluidasserts'
 
 
 class CheeseMaker:
@@ -92,7 +93,6 @@ class CheeseMaker:
 
     async def coagulate(self, project_name: str) -> None:
         """Fetch project's available versions and metadata."""
-        if project_name == 'ccxt': return  # ccxt has way too many releases
         content = await self.json(f'/pypi/{project_name}/json')
         print('Fetching', project_name)
         for version in content['releases'].keys():
@@ -111,6 +111,7 @@ async def main():
     async with open_nursery() as nursery:
         maker = CheeseMaker(nursery, Session(INDEX, connections=CONNECTIONS))
         for project_name in await maker.culture():
+            if project_name in SKIP: continue
             maker.start_soon(maker.coagulate, project_name)
 
 
