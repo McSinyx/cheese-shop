@@ -86,6 +86,23 @@ data from package indices.
 \subsection{Entity Relationship Diagram}
 \subsection{Database Schema}
 
+\subsubsection{releases}
+This entity set represents each releases of the project,include the project and its version. The ID of each releases is the primary key to represent each one of them.
+This release ID is also the foreign key of many primary key in other entity set.
+\subsubsection{keywords}
+Containing both the ID of the releases and the terminology  as primary key,this entity represent the keywords of a specific release.
+\subsubsection{contact}
+Containing contact information of the author,including email (primary key) and name
+\subsubsection{information}
+Specific information of each releases. Containing release ID,summary,homepage and author's email of the releases.
+\subsubsection{trove}
+This entity set represent Trove classifiers,identified by its ID.
+\subsubsection{classifiers}
+Containing the release ID and Trove classifiers ID,this table has the role of linking each release with its Trove classifier
+\subsubsection{Distribution}
+This entity set represents the distribution of each releases. With its primary key its release ID along with its filename,each distribution contains the url,python version and the python version it requires,the distribtions it requires and its digests (a dictionary) sha256 and md5
+
+
 \section{Data Query}
 
 \section{Conclusion}
