@@ -9,6 +9,7 @@
 \usepackage{lmodern}
 \usepackage[nottoc,numbib]{tocbibind}
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\newcommand{\id}[1]{\underline{#1\_id}}
 
 \begin{document}
 \setcounter{page}{0}
@@ -130,25 +131,38 @@ its entity set of data extracted from projects:
 \includegraphics[width=\textwidth]{erd.jpg}
 
 \subsection{Database Schema}
+Based on the entity relationship diagram, we worked out a schema complying
+with the third normal form~\cite{3nf}.
 \begin{center}
   \includegraphics[width=\textwidth]{schema.png}
 \end{center}
 
-\subsubsection{releases}
-This entity set represents each releases of the project,include the name of the project and its version in addition to summary,homepage and author's email. The ID of each releases is the primary key to represent each one of them.
-This release ID is also the foreign key of many primary key in other entity set.
-\subsubsection{keywords}
-Containing both the ID of the releases and the terminology  as primary key,this entity represent the keywords of a specific release.
-\subsubsection{contact}
-Containing contact information of the author,including email (primary key) and name
-\subsubsection{information}
-Specific information of each releases. Containing release ID,summary,homepage and author's email of the releases.
-\subsubsection{trove}
-This entity set represent Trove classifiers,identified by its ID.
-\subsubsection{classifiers}
-Containing the release ID and Trove classifiers ID,this table has the role of representing the relationship of trove and releases
-\subsubsection{Distribution}
-This entity set represents the distribution of each releases. With its primary key its release ID along with its filename,each distribution contains the url,python version and the python version it requires,the distribtions it requires and its digests (a dictionary) sha256 and md5
+\paragraph{contacts(\underline{email}, name)} Contact information of an author,
+including per email as the primary key and per name.
+
+\paragraph{releases(\underline{id}, project, version, summary, homepage, email)}
+This relation represents each release of a project, including its name, version,
+summary, homepage and the email of its author.  The ID of each release is
+the primary key to represent each one of them.  This release ID is also
+the foreign key of many primary key in other entity set.
+
+\paragraph{troves(\underline{id}, classifier)} Valid trove classifiers,
+identified by their ID.
+
+\paragraph{classifiers(\id{release}, \id{trove})}
+Release ID and corresponding trove classifiers ID the release is classified by.
+
+\paragraph{keywords(\id{release}, \underline{term})} Keywords of a specific
+release.  Both the ID of the release and the keyword are set as primary key.
+
+\paragraph{dependencies(\id{release}, \underline{dependency})} This relation
+represents the dependency list of each release, which is a pattern can be
+matched by a release of another project.
+
+\paragraph{distributions(\id{release}, \underline{filename}, size, url,
+dist\_type, python\_version, requires\_python, sha256, md5)}
+Each distribution (i.e. the file that the package manager can use to install)
+and the corresponding url, checksums and other auxiliary information.
 
 
 \section{Data Query}
@@ -167,10 +181,12 @@ Retrieve a list of name, version of all releases classified with all of the give
 \section{Conclusion}
 
 \begin{thebibliography}{69}
-  \bibitem{xmlrpc}
-    The Python Packaging Authority.
+  \bibitem{xmlrpc} The Python Packaging Authority.
     \href{https://warehouse.readthedocs.io/api-reference/xml-rpc}
          {\emph{PyPI’s XML-RPC methods}}.
     Warehouse documentation.
+  \bibitem{3nf} Edgar~F.~Codd.
+    \emph{Further Normalization of the Data Base Relational Model}.
+    IBM Research Report RJ909, August 31, 1971.
 \end{thebibliography}
 \end{document}
