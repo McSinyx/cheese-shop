@@ -94,31 +94,45 @@ which supports queris similar to the following:
     of the given \verb|project|.
   \item \verb|belong_to(name)|: Retrieve a list of projects whose author
     is \verb|name|.
+  \item \verb|browse(classifier)|: Retrieve a list of (\verb|project|,
+    \verb|version|) of all releases classified with all of the given classifier.
+  \item \verb|release_data(project, version)|: Retrieve the following metadata
+    matching the given release: project, version, homepage, author,
+    author's email, summary, license, keywords, classifiers and dependencies
+  \item \verb|search_name(pattern)|: Retrieve a list of (\verb|project|,
+    \verb|version|, \verb|summary|) where the project name matches the pattern.
+  \item \verb|search_summary(pattern)|: Retrieve a list of (\verb|project|,
+    \verb|version|, \verb|summary|) where the summary matches the pattern.
 \end{itemize}
 
 \section{Data Definition}
 \subsection{Entity Relationship Diagram}
+The entity relationship diagram represents the relationship between each of
+its entity set of data extracted from projects:
+\begin{itemize}
+  \item Author(Releases-Contact: Many-One): Within each release, there could be
+    one author, due to data extraction method doesn't support multi-author.
+    Yet an author could have multiple releases under per name.
+  \item Require(Releases-Dependencies: Many-Many): Every release would require
+    a number of dependencies, and many dependencies can each be used by
+    multiple releases.
+  \item Classify(Releases-Trove: Many-Many): This relationship indicates the
+    relationship between trove classifier and each releases, with many release
+    could be classified under one trove classifier, and a release could be
+    classified by many classifiers.
+  \item Contain(Releases-Keyword: Many-Many): A release has many keywords,
+    and also a keyword can also be in many different releases.
+  \item Release(Releases-Distribution: One-Many): Within each releases,
+    a number of distribution(s) would be released.  A distribution could
+    relate to only one releases, but many distributions could be released
+    in the same releases.
+\end{itemize}
 \includegraphics[width=\textwidth]{erd.jpg}
 
-This ER Diagram represents the relationship between each of its entity set of data extracted from projects:
-
-Author(Releases-Contact:Many-One):Within each release,there could be one author,due to data extraction method doesn't support multi-author. Yet an author could have multiple releases under his name
-
-Require(Releases-Dependencies:Many-Many):Every releases would require a number of dependencies,and many dependencies can be used by many releases.
-
-Classify(Releases-Trove: Many-Many): This relationship indicates the relationship between Trove classifier and each releases,with many release could be classified
-under one Trove classifier,and a release could be classified by many classifiers
-
-Contain(Releases-Keyword:Many-Many): A release has many keywords,and also a keyword can also be in many releases.
-  
-Release(Releases-Distribution:One-Many): Within each releases, a number of distribution(s) would be released. A distribution could relate to only 1 releases,but many distributions could be released in the same releases
-
 \subsection{Database Schema}
-
 \begin{center}
   \includegraphics[width=\textwidth]{schema.png}
 \end{center}
-
 
 \subsubsection{releases}
 This entity set represents each releases of the project,include the name of the project and its version in addition to summary,homepage and author's email. The ID of each releases is the primary key to represent each one of them.
@@ -137,7 +151,6 @@ Containing the release ID and Trove classifiers ID,this table has the role of re
 This entity set represents the distribution of each releases. With its primary key its release ID along with its filename,each distribution contains the url,python version and the python version it requires,the distribtions it requires and its digests (a dictionary) sha256 and md5
 
 
-\newpage
 \section{Data Query}
 \subsection{Project Listing}
 Retrieve a list of the project names registered with the project index.
