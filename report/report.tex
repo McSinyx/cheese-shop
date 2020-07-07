@@ -8,6 +8,7 @@
 \usepackage{hyperref}
 \usepackage{lmodern}
 \usepackage[nottoc,numbib]{tocbibind}
+\newcommand{\id}[1]{\underline{#1\_id}}
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
 \begin{document}
@@ -80,7 +81,6 @@ the Python packaging community over \#pypa on Freenode on understanding
 the structure of the metadata as well as finding a way to fetch these
 data from package indices.
 
-\newpage
 \selectlanguage{english}
 \section{User Requirements}
 This project aims to provide a database for metadata queries and Python packages
@@ -130,106 +130,127 @@ its entity set of data extracted from projects:
 \includegraphics[width=\textwidth]{erd.jpg}
 
 \subsection{Database Schema}
+Based on the entity relationship diagram, we worked out a schema complying
+with the third normal form~\cite{3nf}.
 \begin{center}
   \includegraphics[width=\textwidth]{schema.png}
 \end{center}
 
-\subsubsection{releases}
-This entity set represents each releases of the project,include the name of the project and its version in addition to summary,homepage and author's email. The ID of each releases is the primary key to represent each one of them.
-This release ID is also the foreign key of many primary key in other entity set.
-\subsubsection{keywords}
-Containing both the ID of the releases and the terminology  as primary key,this entity represent the keywords of a specific release.
-\subsubsection{contact}
-Containing contact information of the author,including email (primary key) and name
-\subsubsection{information}
-Specific information of each releases. Containing release ID,summary,homepage and author's email of the releases.
-\subsubsection{trove}
-This entity set represent Trove classifiers,identified by its ID.
-\subsubsection{classifiers}
-Containing the release ID and Trove classifiers ID,this table has the role of representing the relationship of trove and releases
-\subsubsection{Distribution}
-This entity set represents the distribution of each releases. With its primary key its release ID along with its filename,each distribution contains the url,python version and the python version it requires,the distribtions it requires and its digests (a dictionary) sha256 and md5
+\paragraph{contacts(\underline{email}, name)} Contact information of an author,
+including per email as the primary key and per name.
 
+\paragraph{releases(\underline{id}, project, version, summary, homepage, email)}
+This relation represents each release of a project, including its name, version,
+summary, homepage and the email of its author.  The ID of each release is
+the primary key to represent each one of them.  This release ID is also
+the foreign key of many primary key in other entity set.
 
-\newpage
+\paragraph{troves(\underline{id}, classifier)} Valid trove classifiers,
+identified by their ID.
+
+\paragraph{classifiers(\id{release}, \id{trove})}
+Release ID and corresponding trove classifiers ID the release is classified by.
+
+\paragraph{keywords(\id{release}, \underline{term})} Keywords of a specific
+release.  Both the ID of the release and the keyword are set as primary key.
+
+\paragraph{dependencies(\id{release}, \underline{dependency})} This relation
+represents the dependency list of each release, which is a pattern can be
+matched by a release of another project.
+
+\paragraph{distributions(\id{release}, \underline{filename}, size, url,
+dist\_type, python\_version, requires\_python, sha256, md5)}
+Each distribution (i.e. the file that the package manager can use to install)
+and the corresponding url, checksums and other auxiliary information.
+
 \section{Data Query}
 \subsection{Project Listing}
 Retrieve a list of registered project names
 \begin{verbatim}
-    SELECT DISTINCT project FROM releases
+SELECT DISTINCT project FROM releases
 \end{verbatim}
+
 \subsection{Project Releases}
 Retrieve a list of releases for the given project name, ordered by version.
 \begin{verbatim}
-    SELECT * FROM releases
-             WHERE project = 'numpy'
-             ORDER BY version
+SELECT * FROM releases
+WHERE project = 'numpy'
+ORDER BY version
 \end{verbatim}
+
 \subsection{Project Latest Release}
 Retrieve the latest version of the given project.
 \begin{verbatim}
-    SELECT * FROM releases
-             WHERE project = 'numpy'
-             ORDER BY version
-             LIMIT 1
+SELECT *
+FROM releases
+WHERE project = 'numpy'
+ORDER BY version
+LIMIT 1
 \end{verbatim}
+
 \subsection{User's Project}
 Retrieve a list of projects whose author is name.
 \begin{verbatim}
-    SELECT project FROM releases
-            LEFT JOIN contacts
-                 ON releases.email = contacts.email
-            WHERE contacts.name = 'Travis E. Oliphant et al.'
+SELECT project
+FROM releases
+LEFT JOIN contacts
+ON releases.email = contacts.email
+WHERE contacts.name = 'Travis E. Oliphant et al.'
 \end{verbatim}
+
 \subsection{Classifiers}
 Retrieve a list of name, version of all releases classified with all the given classifiers, classifiers must be a list of Trove classifier strings.
 \begin{verbatim}
-    SELECT releases.name, releases.version, troves.classifier
-    FROM releases
-    JOIN classifier ON releases.id = classifier.release_id
-    INNER JOIN troves ON classifier.trove_id = troves.id
-    WHERE troves.classifier = 'Python'
+SELECT releases.name, releases.version, troves.classifier
+FROM releases
+JOIN classifier ON releases.id = classifier.release_id
+INNER JOIN troves ON classifier.trove_id = troves.id
+WHERE troves.classifier = 'Python'
 \end{verbatim}
+
 \subsection{Release Data}
 Retrieve metadata describing a specific release.
 \begin{verbatim}
-    SELECT rls.project, rls.version, rls.homepage, rls.author,
-           rls.email, rls.summary, keywords.term,
-           classiffier.troves.classifier,
-           dependencies.dependency
-    FROM releases AS rls
-    INNER JOIN contacts ON rls.email = contacts.email
-    RIGHT JOIN (classifier
-                INNER JOIN troves
-                ON classifier.trove_id = troves.id)
-          ON rls.id = classifier.release_id
-    RIGHT JOIN keywords ON rls.id = keywords.release_id
-    RIGHT JOIN dependencies ON rls.id = dependencies.release_id
-    WHERE rls.id = '1'
-
+SELECT rls.project, rls.version, rls.homepage, rls.author,
+       rls.email, rls.summary, keywords.term,
+       classiffier.troves.classifier,
+       dependencies.dependency
+FROM releases AS rls
+INNER JOIN contacts ON rls.email = contacts.email
+RIGHT JOIN (classifier
+            INNER JOIN troves
+            ON classifier.trove_id = troves.id)
+      ON rls.id = classifier.release_id
+RIGHT JOIN keywords ON rls.id = keywords.release_id
+RIGHT JOIN dependencies ON rls.id = dependencies.release_id
+WHERE rls.id = '1'
 \end{verbatim}
+
 \subsection{Search project by name}
 Retrieve project by name SQL pattern
 \begin{verbatim}
-    SELECT project, version, summary
-    FROM releases
-    WHERE project LIKE 'py%'
+SELECT project, version, summary
+FROM releases
+WHERE project LIKE 'py%'
 \end{verbatim}
+
 \subsection{Search project name by summary}
 Retrieve project by summary SQL pattern
 \begin{verbatim}
-    SELECT project, version, summary
-    FROM releases
-    WHERE summary LIKE '%num%'
+SELECT project, version, summary
+FROM releases
+WHERE summary LIKE '%num%'
 \end{verbatim}
 
 \section{Conclusion}
 
 \begin{thebibliography}{69}
-  \bibitem{xmlrpc}
-    The Python Packaging Authority.
+  \bibitem{xmlrpc} The Python Packaging Authority.
     \href{https://warehouse.readthedocs.io/api-reference/xml-rpc}
          {\emph{PyPI’s XML-RPC methods}}.
     Warehouse documentation.
+  \bibitem{3nf} Edgar~F.~Codd.
+    \emph{Further Normalization of the Data Base Relational Model}.
+    IBM Research Report RJ909, August 31, 1971.
 \end{thebibliography}
 \end{document}
