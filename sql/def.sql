@@ -55,9 +55,5 @@ CREATE TABLE distributions (
 CREATE INDEX contacts_name_idx
 ON contacts (name);
 
-CREATE INDEX releases_project_idx
-ON releases (project);
-
-CREATE INDEX distributions_dist_type_idx
-ON distributions (dist_type);
-
+CREATE INDEX releases_summary_idx
+ON releases (summary);
