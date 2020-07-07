@@ -84,10 +84,25 @@ data from package indices.
 
 \section{Data Definition}
 \subsection{Entity Relationship Diagram}
+\includegraphics[width=0.9\textwidth]{ER Diagram.jpg}
+
+This ER Diagram represents the relationship between each of its entity set of data extracted from projects:
+
+Author(Releases-Contact:Many-One):Within each release,there could be one author,due to data extraction method doesn't support multi-author. Yet an author could have multiple releases under his name
+
+Require(Releases-Dependencies:Many-Many):Every releases would require a number of dependencies,and many dependencies can be used by many releases.
+
+Classify(Releases-Trove: Many-Many): This relationship indicates the relationship between Trove classifier and each releases,with many release could be classified
+under one Trove classifier,and a release could be classified by many classifiers
+
+Contain(Releases-Keyword:Many-Many): A release has many keywords,and also a keyword can also be in many releases.
+  
+Release(Releases-Distribution:One-Many): Within each releases, a number of distribution(s) would be released. A distribution could relate to only 1 releases,but many distributions could be released in the same releases
+
 \subsection{Database Schema}
 
 \subsubsection{releases}
-This entity set represents each releases of the project,include the project and its version. The ID of each releases is the primary key to represent each one of them.
+This entity set represents each releases of the project,include the name of the project and its version in addition to summary,homepage and author's email. The ID of each releases is the primary key to represent each one of them.
 This release ID is also the foreign key of many primary key in other entity set.
 \subsubsection{keywords}
 Containing both the ID of the releases and the terminology  as primary key,this entity represent the keywords of a specific release.
@@ -98,7 +113,7 @@ Specific information of each releases. Containing release ID,summary,homepage an
 \subsubsection{trove}
 This entity set represent Trove classifiers,identified by its ID.
 \subsubsection{classifiers}
-Containing the release ID and Trove classifiers ID,this table has the role of linking each release with its Trove classifier
+Containing the release ID and Trove classifiers ID,this table has the role of representing the relationship of trove and releases
 \subsubsection{Distribution}
 This entity set represents the distribution of each releases. With its primary key its release ID along with its filename,each distribution contains the url,python version and the python version it requires,the distribtions it requires and its digests (a dictionary) sha256 and md5
 
