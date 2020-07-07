@@ -57,3 +57,40 @@ ON contacts (name);
 
 CREATE INDEX releases_summary_idx
 ON releases (summary);
+
+CREATE VIEW authorships
+AS SELECT name as author, project
+FROM contacts NATURAL JOIN releases
+GROUP BY author, project;
+
+DELIMITER //
+CREATE PROCEDURE browse(class varchar(255))
+BEGIN
+  SELECT project, version
+  FROM releases, classifiers
+  WHERE id = release_id AND trove_id = (
+    SELECT id
+    FROM troves
+    WHERE classifier = class);
+END//
+
+CREATE PROCEDURE release_data(project varchar(32), version varchar(32))
+BEGIN
+  DECLARE i smallint;
+  SET i = (
+    SELECT id
+    FROM releases
+    WHERE releases.project = project AND releases.version = version);
+  SELECT project, version, homepage, name as author, email, summary
+  FROM releases NATURAL JOIN contacts
+  WHERE id = i;
+
+  SELECT term as keyword
+  FROM keywords
+  WHERE release_id = i;
+
+  SELECT classifier
+  FROM classifiers, troves
+  WHERE release_id = i AND trove_id = troves.id;
+END//
+DELIMITER ;

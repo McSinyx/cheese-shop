@@ -82,7 +82,7 @@ the structure of the metadata as well as finding a way to fetch these
 data from package indices.
 
 \selectlanguage{english}
-\section{User Requirements}
+\section{User Requirements}\label{req}
 This project aims to provide a database for metadata queries and Python packages
 exploration.  We try to replicate the PyPI's XML-RPC API~\cite{xmlrpc},
 which supports queris similar to the following:
@@ -95,10 +95,10 @@ which supports queris similar to the following:
   \item \verb|belong_to(name)|: Retrieve a list of projects whose author
     is \verb|name|.
   \item \verb|browse(classifier)|: Retrieve a list of (\verb|project|,
-    \verb|version|) of all releases classified with all of the given classifier.
+    \verb|version|) of all releases classified with the given classifier.
   \item \verb|release_data(project, version)|: Retrieve the following metadata
     matching the given release: project, version, homepage, author,
-    author's email, summary, license, keywords, classifiers and dependencies
+    author's email, summary, keywords, classifiers and dependencies
   \item \verb|search_name(pattern)|: Retrieve a list of (\verb|project|,
     \verb|version|, \verb|summary|) where the project name matches the pattern.
   \item \verb|search_summary(pattern)|: Retrieve a list of (\verb|project|,
@@ -129,9 +129,11 @@ its entity set of data extracted from projects:
 \end{itemize}
 \includegraphics[width=\textwidth]{erd.jpg}
 
+\newpage
 \subsection{Database Schema}
 Based on the entity relationship diagram, we worked out a schema complying
-with the third normal form~\cite{3nf}.
+with the third normal form~\cite{3nf}.  Concrete definitions can be found in
+\verb|sql/def.sql|.
 \begin{center}
   \includegraphics[width=\textwidth]{schema.png}
 \end{center}
@@ -163,86 +165,134 @@ dist\_type, python\_version, requires\_python, sha256, md5)}
 Each distribution (i.e. the file that the package manager can use to install)
 and the corresponding url, checksums and other auxiliary information.
 
+With the database defined, we then fetch the metadata of around 100 most
+popular projects on PyPI.  The code used to do this is available in
+\verb|tools/make-cheeses.py|.  More instructions on the setup can be found
+in the project's README.
+
 \section{Data Query}
+In addition to primary keys and unique attributes which are
+implicitly~\cite{idx}, to further optimize, we index \verb|contacts.name|
+and \verb|releases.summary|.  Then, the tasks defined in section \ref{req}
+can be carried out as follows.
+
 \subsection{Project Listing}
-Retrieve a list of registered project names
+To retrieve a list of project names, we can use the following SQL query
 \begin{verbatim}
-SELECT DISTINCT project FROM releases
+SELECT DISTINCT project
+FROM releases;
 \end{verbatim}
 
-\subsection{Project Releases}
-Retrieve a list of releases for the given project name, ordered by version.
+\subsection{Project Release Listing}
+To retrieve a list of releases of project \verb|spam|, ordered by version:
 \begin{verbatim}
-SELECT * FROM releases
-WHERE project = 'numpy'
-ORDER BY version
+SELECT version
+FROM releases
+WHERE project = 'spam'
+ORDER BY version;
 \end{verbatim}
 
 \subsection{Project Latest Release}
-Retrieve the latest version of the given project.
+To retrieve the latest version of the project \verb|spam|:
 \begin{verbatim}
-SELECT *
+SELECT version
 FROM releases
-WHERE project = 'numpy'
-ORDER BY version
-LIMIT 1
+WHERE project = 'spam'
+ORDER BY version DESC
+LIMIT 1;
 \end{verbatim}
 
-\subsection{User's Project}
-Retrieve a list of projects whose author is name.
+\subsection{Project Listing by Author}
+For convenience purposes, we create a view of \verb|authorship|:
+\begin{verbatim}
+CREATE VIEW authorships
+AS SELECT name as author, project
+FROM contacts NATURAL JOIN releases
+GROUP BY author, project;
+\end{verbatim}
+A list of projects authored by Monty Python is then as easy to obtain as
 \begin{verbatim}
 SELECT project
-FROM releases
-LEFT JOIN contacts
-ON releases.email = contacts.email
-WHERE contacts.name = 'Travis E. Oliphant et al.'
+FROM authorships
+WHERE author='Monty Python';
 \end{verbatim}
 
-\subsection{Classifiers}
-Retrieve a list of name, version of all releases classified with all the given classifiers, classifiers must be a list of Trove classifier strings.
+\subsection{Browse by Classifier}
+Since the query is non-trivial, we define a procedure for convenient use:
 \begin{verbatim}
-SELECT releases.name, releases.version, troves.classifier
-FROM releases
-JOIN classifier ON releases.id = classifier.release_id
-INNER JOIN troves ON classifier.trove_id = troves.id
-WHERE troves.classifier = 'Python'
+DELIMITER //
+CREATE PROCEDURE browse(class varchar(255))
+BEGIN
+  SELECT project, version
+  FROM releases, classifiers
+  WHERE id = release_id AND trove_id = (
+    SELECT id
+    FROM troves
+    WHERE classifier = class);
+END//
+DELIMITER ;
 \end{verbatim}
+For instance, listing releases classified as
+\verb|Programming Language :: C| will be as simple as
+\verb|CALL browse('Programming Language :: C');|
 
-\subsection{Release Data}
-Retrieve metadata describing a specific release.
+\subsection{Release Metadata}
+We also define a stored procedure for this task, which seems to be even
+more complex.  The procedure can then be used in similar manner,
+e.g. \verb|CALL release_data('udata', '1.1.1');|
 \begin{verbatim}
-SELECT rls.project, rls.version, rls.homepage, rls.author,
-       rls.email, rls.summary, keywords.term,
-       classiffier.troves.classifier,
-       dependencies.dependency
-FROM releases AS rls
-INNER JOIN contacts ON rls.email = contacts.email
-RIGHT JOIN (classifier
-            INNER JOIN troves
-            ON classifier.trove_id = troves.id)
-      ON rls.id = classifier.release_id
-RIGHT JOIN keywords ON rls.id = keywords.release_id
-RIGHT JOIN dependencies ON rls.id = dependencies.release_id
-WHERE rls.id = '1'
+DELIMITER //
+CREATE PROCEDURE release_data(project varchar(32),
+                              version varchar(32))
+BEGIN
+  DECLARE i smallint;
+  SET i = (
+    SELECT id
+    FROM releases
+    WHERE releases.project = project AND releases.version = version);
+  SELECT project, version, homepage, name as author, email, summary
+  FROM releases NATURAL JOIN contacts
+  WHERE id = i;
+
+  SELECT term as keyword
+  FROM keywords
+  WHERE release_id = i;
+
+  SELECT classifier
+  FROM classifiers, troves
+  WHERE release_id = i AND trove_id = troves.id;
+END//
+DELIMITER ;
 \end{verbatim}
 
-\subsection{Search project by name}
-Retrieve project by name SQL pattern
+\subsection{Project Search by Name}
+To retrieve project by name matching the SQL pattern \verb|py%|
 \begin{verbatim}
 SELECT project, version, summary
 FROM releases
-WHERE project LIKE 'py%'
+WHERE project LIKE 'py%';
 \end{verbatim}
 
 \subsection{Search project name by summary}
-Retrieve project by summary SQL pattern
+To retrieve project by summary matching the SQL pattern \verb|%num%|
 \begin{verbatim}
 SELECT project, version, summary
 FROM releases
-WHERE summary LIKE '%num%'
+WHERE summary LIKE '%num%';
 \end{verbatim}
 
 \section{Conclusion}
+Working on this project has been a great opportunity for us to and apply
+our knowledge in relational databases in real-life tasks.
+During the design and implementation process, we gained a better concept
+about relational databases, as well as how to build from ground up and use
+a database in SQL (MySQL in particular), along with abstractions
+and optimizations.
+
+We also had a chance to take a closer look at the Python Package Index
+and at how their packages' metadata are used and distibuted.  Through
+this project, we think we have reached closer to the final goal of
+metadata mirroring and synchronization.
 
 \begin{thebibliography}{69}
   \bibitem{xmlrpc} The Python Packaging Authority.
@@ -252,5 +302,9 @@ WHERE summary LIKE '%num%'
   \bibitem{3nf} Edgar~F.~Codd.
     \emph{Further Normalization of the Data Base Relational Model}.
     IBM Research Report RJ909, August 31, 1971.
+  \bibitem{idx} MySQL 8.0 Reference Manual.
+    \emph{Oracle}.  Section 8.3.1:
+    \href{https://dev.mysql.com/doc/refman/8.0/en/mysql-indexes.html}
+         {\emph{How MySQL Uses Indexes}}.
 \end{thebibliography}
 \end{document}
