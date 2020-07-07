@@ -1,0 +1,7 @@
+\frametitle{Project Search by Summary}
+\Large
+\begin{verbatim}
+SELECT project, version, summary
+FROM releases
+WHERE summary LIKE '%num%';
+\end{verbatim}

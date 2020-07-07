@@ -6,6 +6,7 @@
 \usepackage{hyperref}
 \usepackage{lmodern}
 \usepackage{siunitx}
+\newcommand{\byte}{B}
 
 \mode<presentation>{}
 \usetheme[hideothersubsections]{Hannover}
@@ -27,15 +28,190 @@
 \begin{document}
 \frame{\titlepage}
 \selectlanguage{english}
+
+\section{Introduction}
 \begin{frame}{Contents}
   \tableofcontents
 \end{frame}
 
-\section{Introduction}
+\begin{frame}{Why?}\Large
+  \begin{itemize}
+    \item Python package managers download\\
+      whole packages just for metadata
+    \item Mirroring PyPI is expensive (\SI{6}{\giga\byte})
+    \item Middle approach: Mirroring metadata
+  \end{itemize}
+\end{frame}
+
+\section{User Requirements}
 \frame{\tableofcontents[currentsection]}
+\begin{frame}[fragile]{Tasks}
+  \begin{itemize}
+    \item \verb|list_projects()|\\
+      List of registered project names.
+    \item \verb|project_releases(project)|\\
+      List of releases for given \verb|project|, ordered by version.
+    \item \verb|project_release_latest()|\\
+      Latest release of given \verb|project|.
+    \item \verb|belong_to(name)|\\
+      List of projects whose author is \verb|name|.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Tasks (cont.)}
+  \begin{itemize}
+    \item \verb|browse(classifier)|: List of (\verb|project|,
+      \verb|version|) of all releases classified by \verb|classifier|.
+    \item \verb|release_data(project, version)|: Metadata of given release:
+      project, version, homepage, author, author's email, summary, keywords,
+      classifiers and dependencies
+    \item \verb|search_name(pattern)|: List of (\verb|project|,
+      \verb|version|, \verb|summary|) where \verb|name| matches \verb|pattern|.
+    \item \verb|search_summary(pattern)|: List of (\verb|project|,
+      \verb|version|, \verb|summary|) where \verb|summary| matches \verb|pattern|.
+  \end{itemize}
+\end{frame}
+
+\section{Data Definition}
+\frame{\tableofcontents[currentsection]}
+\subsection{Entity Relationship Diagram}
+\begin{frame}{Entity Relationship Diagram}
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{erd.png}
+  \end{center}
+\end{frame}
+
+\subsection{Database Schema}
+\begin{frame}{Database Schema}
+  \begin{center}
+    \includegraphics[width=\textwidth]{schema.png}
+  \end{center}
+\end{frame}
+
+\section{Data Query}
+\frame{\tableofcontents[currentsection]}
+\begin{frame}[fragile]{Project Listing}\huge
+\begin{verbatim}
+SELECT DISTINCT project
+FROM releases;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Project Release Listing}\LARGE
+\begin{verbatim}
+SELECT version
+FROM releases
+WHERE project = 'spam'
+ORDER BY version;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Project Latest Release}\LARGE
+\begin{verbatim}
+SELECT version
+FROM releases
+WHERE project = 'spam'
+ORDER BY version DESC
+LIMIT 1;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Project Listing by Author (view)}\Large
+\begin{verbatim}
+CREATE VIEW authorships
+AS SELECT name as author, project
+FROM contacts NATURAL JOIN releases
+GROUP BY author, project;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Project Listing by Author (query)}\Large
+\begin{verbatim}
+SELECT project
+FROM authorships
+WHERE author='Monty Python';
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Browse by Classifier}\large
+\begin{verbatim}
+DELIMITER //
+CREATE PROCEDURE browse(class varchar(255))
+BEGIN
+  SELECT project, version
+  FROM releases, classifiers
+  WHERE id = release_id AND trove_id = (
+    SELECT id
+    FROM troves
+    WHERE classifier = class);
+END//
+DELIMITER ;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Release Metadata}
+\begin{verbatim}
+DELIMITER //
+CREATE PROCEDURE release_data(
+  project varchar(32), version varchar(32))
+BEGIN
+  DECLARE i smallint;
+  SET i = (
+    SELECT id
+    FROM releases
+    WHERE releases.project = project
+      AND releases.version = version);
+  SELECT project, version, homepage,
+    name as author, email, summary
+  FROM releases NATURAL JOIN contacts
+  WHERE id = i;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Release Metadata (cont.)}
+\begin{verbatim}
+  SELECT term as keyword
+  FROM keywords
+  WHERE release_id = i;
+
+  SELECT classifier
+  FROM classifiers, troves
+  WHERE release_id = i AND trove_id = troves.id;
+
+  SELECT dependency
+  FROM dependencies
+  WHERE release_id = i;
+END//
+DELIMITER ;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Project Search by Name}\Large
+\begin{verbatim}
+SELECT project, version, summary
+FROM releases
+WHERE project LIKE 'py%';
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]{Project Search by Summary}\Large
+\begin{verbatim}
+SELECT project, version, summary
+FROM releases
+WHERE summary LIKE '%num%';
+\end{verbatim}
+\end{frame}
 
 \section{Conclusion}
 \frame{\tableofcontents[currentsection]}
+\begin{frame}{What We Learnt}\Large
+  \begin{itemize}\Large
+    \item Relational databases
+    \item SQL---MySQL in particular
+    \item Python package metadata format
+  \end{itemize}
+\end{frame}
+
 \begin{frame}{Copying}\Large
   \begin{center}
     \includegraphics[width=0.2\textwidth]{CC.png}

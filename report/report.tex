@@ -95,10 +95,10 @@ which supports queris similar to the following:
   \item \verb|belong_to(name)|: Retrieve a list of projects whose author
     is \verb|name|.
   \item \verb|browse(classifier)|: Retrieve a list of (\verb|project|,
-    \verb|version|) of all releases classified with the given classifier.
+    \verb|version|) of all releases classified by the given \verb|classifier|.
   \item \verb|release_data(project, version)|: Retrieve the following metadata
     matching the given release: project, version, homepage, author,
-    author's email, summary, keywords, classifiers and dependencies
+    author's email, summary, keywords, classifiers and dependencies.
   \item \verb|search_name(pattern)|: Retrieve a list of (\verb|project|,
     \verb|version|, \verb|summary|) where the project name matches the pattern.
   \item \verb|search_summary(pattern)|: Retrieve a list of (\verb|project|,
@@ -127,7 +127,7 @@ its entity set of data extracted from projects:
     relate to only one releases, but many distributions could be released
     in the same releases.
 \end{itemize}
-\includegraphics[width=\textwidth]{erd.jpg}
+\includegraphics[width=\textwidth]{erd.png}
 
 \newpage
 \subsection{Database Schema}
@@ -261,6 +261,10 @@ BEGIN
   SELECT classifier
   FROM classifiers, troves
   WHERE release_id = i AND trove_id = troves.id;
+
+  SELECT dependency
+  FROM dependencies
+  WHERE release_id = i;
 END//
 DELIMITER ;
 \end{verbatim}
@@ -273,7 +277,7 @@ FROM releases
 WHERE project LIKE 'py%';
 \end{verbatim}
 
-\subsection{Search project name by summary}
+\subsection{Project Search by Summary}
 To retrieve project by summary matching the SQL pattern \verb|%num%|
 \begin{verbatim}
 SELECT project, version, summary

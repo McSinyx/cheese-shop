@@ -92,5 +92,9 @@ BEGIN
   SELECT classifier
   FROM classifiers, troves
   WHERE release_id = i AND trove_id = troves.id;
+
+  SELECT dependency
+  FROM dependencies
+  WHERE release_id = i;
 END//
 DELIMITER ;
