@@ -151,19 +151,76 @@ Containing the release ID and Trove classifiers ID,this table has the role of re
 This entity set represents the distribution of each releases. With its primary key its release ID along with its filename,each distribution contains the url,python version and the python version it requires,the distribtions it requires and its digests (a dictionary) sha256 and md5
 
 
+\newpage
 \section{Data Query}
 \subsection{Project Listing}
-Retrieve a list of the project names registered with the project index.
+Retrieve a list of registered project names
+\begin{verbatim}
+    SELECT DISTINCT project FROM releases
+\end{verbatim}
 \subsection{Project Releases}
-Retrieve a list of the releases registered for the given project name, ordered by version.
-\subsection{Users}
-Retrieve a list of role, user for a given project name.
-\subsection{Release URLs}
-Retrieve a list of download URLs for the given release version.
-\subsection{Release Data}
-retrieve metadata describing a specific release version.
+Retrieve a list of releases for the given project name, ordered by version.
+\begin{verbatim}
+    SELECT * FROM releases
+             WHERE project = 'numpy'
+             ORDER BY version
+\end{verbatim}
+\subsection{Project Latest Release}
+Retrieve the latest version of the given project.
+\begin{verbatim}
+    SELECT * FROM releases
+             WHERE project = 'numpy'
+             ORDER BY version
+             LIMIT 1
+\end{verbatim}
+\subsection{User's Project}
+Retrieve a list of projects whose author is name.
+\begin{verbatim}
+    SELECT project FROM releases
+                   LEFT JOIN contacts ON releases.email = contacts.email
+                   WHERE contacts.name = 'Travis E. Oliphant et al.'
+\end{verbatim}
 \subsection{Classifiers}
-Retrieve a list of name, version of all releases classified with all of the given classifiers, classifiers must be a list of Trove classifier strings.
+Retrieve a list of name, version of all releases classified with all the given classifiers, classifiers must be a list of Trove classifier strings.
+\begin{verbatim}
+    SELECT releases.name, releases.version, troves.classifier
+    FROM releases
+    JOIN classifier ON releases.id = classifier.release_id
+    INNER JOIN troves ON classifier.trove_id = troves.id
+    WHERE troves.classifier = 'Python'
+\end{verbatim}
+\subsection{Release Data}
+Retrieve metadata describing a specific release.
+\begin{verbatim}
+    SELECT rls.project, rls.version, rls.homepage, rls.author,
+           rls.email, rls.summary, keywords.term,
+           classiffier.troves.classifier, dependencies.dependency
+    FROM releases AS rls
+    INNER JOIN contacts ON rls.email = contacts.email
+    RIGHT JOIN (classifier
+                INNER JOIN troves
+                ON classifier.trove_id = troves.id)
+          ON rls.id = classifier.release_id
+    RIGHT JOIN keywords ON rls.id = keywords.release_id
+    RIGHT JOIN dependencies ON rls.id = dependencies.release_id
+    WHERE rls.id = '1'
+
+\end{verbatim}
+\subsection{Search project by name}
+Retrieve project by name SQL pattern
+\begin{verbatim}
+    SELECT project, version, summary
+    FROM releases
+    WHERE project LIKE 'py%'
+\end{verbatim}
+\subsection{Search project name by summary}
+Retrieve project by summary SQL pattern
+\begin{verbatim}
+    SELECT project, version, summary
+    FROM releases
+    WHERE summary LIKE '%num%'
+\end{verbatim}
+
 \section{Conclusion}
 
 \begin{thebibliography}{69}
