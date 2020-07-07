@@ -177,8 +177,9 @@ Retrieve the latest version of the given project.
 Retrieve a list of projects whose author is name.
 \begin{verbatim}
     SELECT project FROM releases
-                   LEFT JOIN contacts ON releases.email = contacts.email
-                   WHERE contacts.name = 'Travis E. Oliphant et al.'
+            LEFT JOIN contacts
+                 ON releases.email = contacts.email
+            WHERE contacts.name = 'Travis E. Oliphant et al.'
 \end{verbatim}
 \subsection{Classifiers}
 Retrieve a list of name, version of all releases classified with all the given classifiers, classifiers must be a list of Trove classifier strings.
@@ -194,7 +195,8 @@ Retrieve metadata describing a specific release.
 \begin{verbatim}
     SELECT rls.project, rls.version, rls.homepage, rls.author,
            rls.email, rls.summary, keywords.term,
-           classiffier.troves.classifier, dependencies.dependency
+           classiffier.troves.classifier,
+           dependencies.dependency
     FROM releases AS rls
     INNER JOIN contacts ON rls.email = contacts.email
     RIGHT JOIN (classifier
