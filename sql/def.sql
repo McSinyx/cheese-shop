@@ -51,3 +51,9 @@ CREATE TABLE distributions (
   md5 char(32),
   PRIMARY KEY (release_id, filename),
   FOREIGN KEY (release_id) REFERENCES releases(id));
+ 
+CREATE INDEX contacts_name_idx
+ON contacts (name);
+
+CREATE INDEX contacts_email_idx
+ON contacts (email);
