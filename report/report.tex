@@ -83,10 +83,22 @@ data from package indices.
 \newpage
 \selectlanguage{english}
 \section{User Requirements}
+This project aims to provide a database for metadata queries and Python packages
+exploration.  We try to replicate the PyPI's XML-RPC API~\cite{xmlrpc},
+which supports queris similar to the following:
+\begin{itemize}
+  \item \verb|list_projects()|: Retrieve a list of registered project names.
+  \item \verb|project_releases(project)|: Retrieve a list of releases for
+    the given \verb|project|, ordered by version.
+  \item \verb|project_release_latest()|: Retrieve the latest release
+    of the given \verb|project|.
+  \item \verb|belong_to(name)|: Retrieve a list of projects whose author
+    is \verb|name|.
+\end{itemize}
 
 \section{Data Definition}
 \subsection{Entity Relationship Diagram}
-\includegraphics[width=0.9\textwidth]{ER Diagram.jpg}
+\includegraphics[width=\textwidth]{erd.jpg}
 
 This ER Diagram represents the relationship between each of its entity set of data extracted from projects:
 
@@ -103,12 +115,9 @@ Release(Releases-Distribution:One-Many): Within each releases, a number of distr
 
 \subsection{Database Schema}
 
-\begin{figure}[htp]
-    \centering
-    \includegraphics[width=17cm]{Schema.png}
-    \caption{Schema}
-    \label{fig:Schema}
-\end{figure}
+\begin{center}
+  \includegraphics[width=\textwidth]{schema.png}
+\end{center}
 
 
 \subsubsection{releases}
@@ -145,5 +154,10 @@ Retrieve a list of name, version of all releases classified with all of the give
 \section{Conclusion}
 
 \begin{thebibliography}{69}
+  \bibitem{xmlrpc}
+    The Python Packaging Authority.
+    \href{https://warehouse.readthedocs.io/api-reference/xml-rpc}
+         {\emph{PyPI’s XML-RPC methods}}.
+    Warehouse documentation.
 \end{thebibliography}
 \end{document}
