@@ -128,8 +128,20 @@ Containing the release ID and Trove classifiers ID,this table has the role of re
 This entity set represents the distribution of each releases. With its primary key its release ID along with its filename,each distribution contains the url,python version and the python version it requires,the distribtions it requires and its digests (a dictionary) sha256 and md5
 
 
+\newpage
 \section{Data Query}
-
+\subsection{Project Listing}
+Retrieve a list of the project names registered with the project index.
+\subsection{Project Releases}
+Retrieve a list of the releases registered for the given project name, ordered by version.
+\subsection{Users}
+Retrieve a list of role, user for a given project name.
+\subsection{Release URLs}
+Retrieve a list of download URLs for the given release version.
+\subsection{Release Data}
+retrieve metadata describing a specific release version.
+\subsection{Classifiers}
+Retrieve a list of name, version of all releases classified with all of the given classifiers, classifiers must be a list of Trove classifier strings.
 \section{Conclusion}
 
 \begin{thebibliography}{69}
