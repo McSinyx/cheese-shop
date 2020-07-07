@@ -3,6 +3,8 @@
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{lmodern}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{lmodern}
 \usepackage[nottoc,numbib]{tocbibind}
@@ -100,6 +102,14 @@ Contain(Releases-Keyword:Many-Many): A release has many keywords,and also a keyw
 Release(Releases-Distribution:One-Many): Within each releases, a number of distribution(s) would be released. A distribution could relate to only 1 releases,but many distributions could be released in the same releases
 
 \subsection{Database Schema}
+
+\begin{figure}[htp]
+    \centering
+    \includegraphics[width=17cm]{Schema.png}
+    \caption{Schema}
+    \label{fig:Schema}
+\end{figure}
+
 
 \subsubsection{releases}
 This entity set represents each releases of the project,include the name of the project and its version in addition to summary,homepage and author's email. The ID of each releases is the primary key to represent each one of them.
